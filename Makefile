@@ -1,3 +1,7 @@
+REGISTRY_USER := d13105
+REGISTRY_PASSWORD ?=
+CURRENT_APP_VERSION := $(shell git describe --tags --long --always)
+DOCKER_IMAGE_NAME := ${REGISTRY_USER}/autodoc:${CURRENT_APP_VERSION}
 
 docker_final:
 	docker build -t ${DOCKER_IMAGE_NAME} .
