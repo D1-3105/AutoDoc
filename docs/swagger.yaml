@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  api.AllResponse:
+    properties:
+      allFiles:
+        items:
+          type: string
+        type: array
+    type: object
   api.ErrorResponse:
     description: Returned when an error occurs during request processing.
     properties:
@@ -55,13 +62,30 @@ definitions:
           type: object
         type: array
     type: object
-host: localhost:9090
 info:
   contact: {}
-  description: API для AutoRedoc
-  title: AutoRedoc API
+  description: API для AutoDoc
+  title: AutoDoc API
   version: "1.0"
 paths:
+  /all:
+    get:
+      description: Recursively scans the ./scalar directory and returns a list of
+        CDN URLs pointing to each `index.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.AllResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get all index.html files in the "scalar" directory
+      tags:
+      - Files
   /openapi-export:
     post:
       consumes:

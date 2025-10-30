@@ -116,9 +116,41 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 	slog.Info("URL: %s", success.Url)
 }
 
+type AllResponse struct {
+	AllFiles []string `json:"allFiles"`
+}
+
+// listAll handles a GET request to list all `index.html` files in the "scalar" directory
+// and returns their full CDN URLs.
+//
+// @Summary      Get all index.html files in the "scalar" directory
+// @Description  Recursively scans the ./scalar directory and returns a list of CDN URLs pointing to each `index.
+// html` found in subdirectories.
+//
+// @Tags         Files
+// @Produce      application/json
+// @Success      200  {object}  AllResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /all [get]
+func listAll(w http.ResponseWriter, _ *http.Request) {
+	files, err := os.ReadDir("./scalar")
+	if err != nil {
+		returnError(w, err)
+		return
+	}
+	allFiles := AllResponse{AllFiles: []string{}}
+	for _, f := range files {
+		allFiles.AllFiles = append(allFiles.AllFiles, BaseCDNUrl+f.Name()+"/index.html")
+	}
+	parser := json.NewEncoder(w)
+	_ = parser.Encode(allFiles)
+	return
+}
+
 // Router returns a new Gorilla mux router with the OpenAPI export endpoint registered.
 func Router() *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/openapi-export", openapiExport).Methods(http.MethodPost)
+	r.HandleFunc("/all", listAll).Methods(http.MethodGet)
 	return r
 }

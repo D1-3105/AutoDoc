@@ -1,14 +1,39 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API для AutoRedoc",
-        "title": "AutoRedoc API",
+        "description": "API для AutoDoc",
+        "title": "AutoDoc API",
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:9090",
     "basePath": "/api/v1",
     "paths": {
+        "/all": {
+            "get": {
+                "description": "Recursively scans the ./scalar directory and returns a list of CDN URLs pointing to each `index.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Get all index.html files in the \"scalar\" directory",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.AllResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/openapi-export": {
             "post": {
                 "description": "Accepts a full OpenAPI JSON schema, builds static Redoc documentation, and returns a CDN URL.",
@@ -51,6 +76,17 @@
         }
     },
     "definitions": {
+        "api.AllResponse": {
+            "type": "object",
+            "properties": {
+                "allFiles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "api.ErrorResponse": {
             "description": "Returned when an error occurs during request processing.",
             "type": "object",

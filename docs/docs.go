@@ -15,6 +15,32 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/all": {
+            "get": {
+                "description": "Recursively scans the ./scalar directory and returns a list of CDN URLs pointing to each ` + "`" + `index.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Get all index.html files in the \"scalar\" directory",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.AllResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/openapi-export": {
             "post": {
                 "description": "Accepts a full OpenAPI JSON schema, builds static Redoc documentation, and returns a CDN URL.",
@@ -57,6 +83,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.AllResponse": {
+            "type": "object",
+            "properties": {
+                "allFiles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "api.ErrorResponse": {
             "description": "Returned when an error occurs during request processing.",
             "type": "object",
@@ -141,11 +178,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:9090",
+	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "AutoRedoc API",
-	Description:      "API для AutoRedoc",
+	Title:            "AutoDoc API",
+	Description:      "API для AutoDoc",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
