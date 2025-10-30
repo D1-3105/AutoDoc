@@ -1,0 +1,92 @@
+basePath: /api/v1
+definitions:
+  api.ErrorResponse:
+    description: Returned when an error occurs during request processing.
+    properties:
+      error:
+        example: invalid JSON body
+        type: string
+    type: object
+  api.ExportSuccess:
+    description: Returned when the OpenAPI schema has been successfully exported.
+    properties:
+      url:
+        example: https://cdn.example.com/example-service/index.html
+        type: string
+    type: object
+  api.FullOpenAPI:
+    description: Full OpenAPI schema body used in export requests.
+    properties:
+      components:
+        additionalProperties: true
+        type: object
+      info:
+        properties:
+          description:
+            type: string
+          termsOfService:
+            type: string
+          title:
+            example: example-service
+            type: string
+          version:
+            example: 1.0.0
+            type: string
+        type: object
+      openapi:
+        example: 3.0.0
+        type: string
+      paths:
+        additionalProperties: true
+        type: object
+      security:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      servers:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      tags:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+    type: object
+host: localhost:9090
+info:
+  contact: {}
+  description: API для AutoRedoc
+  title: AutoRedoc API
+  version: "1.0"
+paths:
+  /openapi-export:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a full OpenAPI JSON schema, builds static Redoc documentation,
+        and returns a CDN URL.
+      parameters:
+      - description: Full OpenAPI Schema
+        in: body
+        name: schema
+        required: true
+        schema:
+          $ref: '#/definitions/api.FullOpenAPI'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ExportSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Export OpenAPI schema to Redoc
+      tags:
+      - openapi
+swagger: "2.0"

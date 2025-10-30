@@ -1,0 +1,133 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API для AutoRedoc",
+        "title": "AutoRedoc API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:9090",
+    "basePath": "/api/v1",
+    "paths": {
+        "/openapi-export": {
+            "post": {
+                "description": "Accepts a full OpenAPI JSON schema, builds static Redoc documentation, and returns a CDN URL.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openapi"
+                ],
+                "summary": "Export OpenAPI schema to Redoc",
+                "parameters": [
+                    {
+                        "description": "Full OpenAPI Schema",
+                        "name": "schema",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.FullOpenAPI"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ExportSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.ErrorResponse": {
+            "description": "Returned when an error occurs during request processing.",
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "invalid JSON body"
+                }
+            }
+        },
+        "api.ExportSuccess": {
+            "description": "Returned when the OpenAPI schema has been successfully exported.",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://cdn.example.com/example-service/index.html"
+                }
+            }
+        },
+        "api.FullOpenAPI": {
+            "description": "Full OpenAPI schema body used in export requests.",
+            "type": "object",
+            "properties": {
+                "components": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "info": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "termsOfService": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string",
+                            "example": "example-service"
+                        },
+                        "version": {
+                            "type": "string",
+                            "example": "1.0.0"
+                        }
+                    }
+                },
+                "openapi": {
+                    "type": "string",
+                    "example": "3.0.0"
+                },
+                "paths": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "security": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "servers": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            }
+        }
+    }
+}
