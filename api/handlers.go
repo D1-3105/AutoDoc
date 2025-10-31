@@ -90,12 +90,11 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Wrote file: %s", fullSchema.Info.Title+".json")
 	slog.Info("File path: %s", fullPth)
 
-	redocShortPath := fmt.Sprintf("./scalar/%s", fullSchema.Info.Title)
+	redocShortPath := fmt.Sprintf("./exported/%s", fullSchema.Info.Title)
 	fullPth, _ = filepath.Abs(fullPth)
 	redocPath, _ := filepath.Abs(redocShortPath)
 	cmdCommand := []string{
-		"npx", "@scalar/cli", "document", "bundle", fullPth,
-		"-o", filepath.Join(redocPath, "index.html"),
+		"/bin/bash", "html-swagger.sh", fullPth, filepath.Join(redocPath, "index.html"),
 	}
 	slog.Info("Running command: %v", cmdCommand)
 	_ = os.MkdirAll(redocPath, 0755)
@@ -120,11 +119,11 @@ type AllResponse struct {
 	AllFiles []string `json:"allFiles"`
 }
 
-// listAll handles a GET request to list all `index.html` files in the "scalar" directory
+// listAll handles a GET request to list all `index.html` files in the "exported" directory
 // and returns their full CDN URLs.
 //
-// @Summary      Get all index.html files in the "scalar" directory
-// @Description  Recursively scans the ./scalar directory and returns a list of CDN URLs pointing to each `index.
+// @Summary      Get all index.html files in the "exported" directory
+// @Description  Recursively scans the ./exported directory and returns a list of CDN URLs pointing to each `index.
 // html` found in subdirectories.
 //
 // @Tags         Files
@@ -133,7 +132,7 @@ type AllResponse struct {
 // @Failure      500  {object}  ErrorResponse
 // @Router       /all [get]
 func listAll(w http.ResponseWriter, _ *http.Request) {
-	files, err := os.ReadDir("./scalar")
+	files, err := os.ReadDir("./exported")
 	if err != nil {
 		returnError(w, err)
 		return
