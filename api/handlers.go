@@ -90,7 +90,7 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Wrote file: %s", fullSchema.Info.Title+".json")
 	slog.Info("File path: %s", fullPth)
 
-	redocShortPath := "./scalar/" + fullSchema.Info.Title
+	redocShortPath := fmt.Sprintf("./scalar/%s", fullSchema.Info.Title)
 	fullPth, _ = filepath.Abs(fullPth)
 	redocPath, _ := filepath.Abs(redocShortPath)
 	cmdCommand := []string{
@@ -109,7 +109,7 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	success := ExportSuccess{Url: BaseCDNUrl + fullSchema.Info.Title + "/index.html"}
+	success := ExportSuccess{Url: fmt.Sprintf("%s%s/index.html", BaseCDNUrl, fullSchema.Info.Title)}
 	_ = json.NewEncoder(w).Encode(success)
 
 	slog.Info("Exported: %s", fullSchema.Info.Title)
