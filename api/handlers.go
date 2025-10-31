@@ -140,7 +140,7 @@ func listAll(w http.ResponseWriter, _ *http.Request) {
 	}
 	allFiles := AllResponse{AllFiles: []string{}}
 	for _, f := range files {
-		allFiles.AllFiles = append(allFiles.AllFiles, BaseCDNUrl+f.Name()+"/index.html")
+		allFiles.AllFiles = append(allFiles.AllFiles, fmt.Sprintf("%q%s/index.html", BaseCDNUrl, f.Name()))
 	}
 	parser := json.NewEncoder(w)
 	_ = parser.Encode(allFiles)
