@@ -20,9 +20,9 @@ RUN apt-get update && \
 
 # Copy Go binary
 COPY --from=builder /bin/autodoc /bin/autodoc
-
 # Copy Node.js app + deps
 COPY --from=node-builder /app /node_js
+COPY ./html-swagger.sh /html-swagger.sh
 WORKDIR /
 RUN chmod +x /node_js/deref.js
 
