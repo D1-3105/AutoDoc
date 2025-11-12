@@ -70,7 +70,7 @@ info:
 paths:
   /all:
     get:
-      description: Recursively scans the ./scalar directory and returns a list of
+      description: Recursively scans the ./exported directory and returns a list of
         CDN URLs pointing to each `index.
       produces:
       - application/json
@@ -83,9 +83,34 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.ErrorResponse'
-      summary: Get all index.html files in the "scalar" directory
+      summary: Get all index.html files in the "exported" directory
       tags:
       - Files
+  /expand/{name}:
+    get:
+      consumes:
+      - application/json
+      description: Returns the expanded openapi schema
+      parameters:
+      - description: JSON name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FullOpenAPI'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Export OpenAPI schema to Redoc
+      tags:
+      - openapi
   /openapi-export:
     post:
       consumes:

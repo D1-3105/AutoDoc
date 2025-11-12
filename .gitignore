@@ -1,3 +1,4 @@
 exported/
 schemas/*.json
 .idea/*
+node_js/node_modules
