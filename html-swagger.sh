@@ -66,7 +66,7 @@ cat > "$OUTPUT_HTML" <<EOF
                   },
                   onClick: async () => {
                     try {
-                      let url = window.location.href;
+                      let url = window.location.pathname;
                       url = url.replace(/\/index\.html$|\/$/, '');
                       if (!url.endsWith('.json')) {
                         url = "/api/v1/expand" + url + '.json';
