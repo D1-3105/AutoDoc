@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 // BaseCDNUrl is the base CDN URL used to construct export links.
@@ -48,6 +50,7 @@ type ExportSuccess struct {
 
 // returnError sends an error response to the client.
 func returnError(w http.ResponseWriter, err error) {
+	slog.Error("Error handling request: %v", err)
 	w.WriteHeader(http.StatusBadRequest)
 	newError := ErrorResponse{Error: err.Error()}
 	_ = json.NewEncoder(w).Encode(newError)
@@ -115,6 +118,43 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 	slog.Info("URL: %s", success.Url)
 }
 
+// expandedOpenapi handles OpenAPI export requests.
+//
+// @Summary Export OpenAPI schema to Redoc
+// @Description Returns the expanded openapi schema
+// @Tags openapi
+// @Param        name   path      string  true  "JSON name"
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} FullOpenAPI
+// @Failure 400 {object} ErrorResponse
+// @Router /expand/{name} [get]
+func expandedOpenapi(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	schemaName := vars["name"]
+	slog.Info("Received request for schema: %s", schemaName)
+	schemaPath, err := filepath.Abs(
+		fmt.Sprintf("./schemas/%s.json", strings.TrimSuffix(schemaName, ".json")),
+	)
+	if err != nil {
+		returnError(w, err)
+		return
+	}
+	cmd := exec.CommandContext(context.Background(), "node", "node_js/deref.js", schemaPath)
+	cmd.Dir = ""
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		returnError(w, fmt.Errorf("error running command: %w; output: %s", err, output))
+		return
+	}
+	if !json.Valid(output) {
+		slog.Error("Failed to parse JSON: %s", output)
+		returnError(w, fmt.Errorf("failed to parse JSON: %s", output))
+		return
+	}
+	_, _ = w.Write(output)
+}
+
 type AllResponse struct {
 	AllFiles []string `json:"allFiles"`
 }
@@ -151,5 +191,6 @@ func Router() *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/openapi-export", openapiExport).Methods(http.MethodPost)
 	r.HandleFunc("/all", listAll).Methods(http.MethodGet)
+	r.HandleFunc("/expand/{name}", expandedOpenapi).Methods(http.MethodGet)
 	return r
 }

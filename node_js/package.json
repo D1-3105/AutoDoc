@@ -1,0 +1,10 @@
+{
+  "name": "openapi-deref",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@scalar/openapi-parser": "^x.x.x",
+    "fast-safe-stringify": "^2.1.1",
+    "js-yaml": "^x.x.x"
+  }
+}

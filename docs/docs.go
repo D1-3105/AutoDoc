@@ -17,14 +17,14 @@ const docTemplate = `{
     "paths": {
         "/all": {
             "get": {
-                "description": "Recursively scans the ./scalar directory and returns a list of CDN URLs pointing to each ` + "`" + `index.",
+                "description": "Recursively scans the ./exported directory and returns a list of CDN URLs pointing to each ` + "`" + `index.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Files"
                 ],
-                "summary": "Get all index.html files in the \"scalar\" directory",
+                "summary": "Get all index.html files in the \"exported\" directory",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -34,6 +34,44 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/expand/{name}": {
+            "get": {
+                "description": "Returns the expanded openapi schema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openapi"
+                ],
+                "summary": "Export OpenAPI schema to Redoc",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JSON name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.FullOpenAPI"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorResponse"
                         }
