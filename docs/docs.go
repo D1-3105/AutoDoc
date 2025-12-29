@@ -146,6 +146,10 @@ const docTemplate = `{
             "description": "Returned when the OpenAPI schema has been successfully exported.",
             "type": "object",
             "properties": {
+                "redocUrl": {
+                    "type": "string",
+                    "example": "https://cdn.example.com/example-service/redoc.html"
+                },
                 "url": {
                     "type": "string",
                     "example": "https://cdn.example.com/example-service/index.html"

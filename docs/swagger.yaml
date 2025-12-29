@@ -17,6 +17,9 @@ definitions:
   api.ExportSuccess:
     description: Returned when the OpenAPI schema has been successfully exported.
     properties:
+      redocUrl:
+        example: https://cdn.example.com/example-service/redoc.html
+        type: string
       url:
         example: https://cdn.example.com/example-service/index.html
         type: string

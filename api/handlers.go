@@ -45,7 +45,8 @@ type ErrorResponse struct {
 // ExportSuccess represents a successful export response.
 // @description Returned when the OpenAPI schema has been successfully exported.
 type ExportSuccess struct {
-	Url string `json:"url" example:"https://cdn.example.com/example-service/index.html"`
+	SwaggerUrl string `json:"url" example:"https://cdn.example.com/example-service/index.html"`
+	RedocUrl   string `json:"redocUrl" example:"https://cdn.example.com/example-service/redoc.html"`
 }
 
 // returnError sends an error response to the client.
@@ -96,26 +97,46 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 	redocShortPath := fmt.Sprintf("./exported/%s", fullSchema.Info.Title)
 	fullPth, _ = filepath.Abs(fullPth)
 	redocPath, _ := filepath.Abs(redocShortPath)
-	cmdCommand := []string{
-		"/bin/bash", "html-swagger.sh", fullPth, filepath.Join(redocPath, "index.html"),
+	makeUI := func(cmdCommand []string, cmdDir string) error {
+		slog.Info("Running command: %v", cmdCommand)
+		_ = os.MkdirAll(redocPath, 0755)
+		var stderr bytes.Buffer
+		cmd := exec.Command(cmdCommand[0], cmdCommand[1:]...)
+		cmd.Dir = cmdDir
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			err := fmt.Errorf("error running command: %w, stderr: %s", err, stderr.String())
+			return err
+		}
+		return nil
 	}
-	slog.Info("Running command: %v", cmdCommand)
-	_ = os.MkdirAll(redocPath, 0755)
-	var stderr bytes.Buffer
-	cmd := exec.Command(cmdCommand[0], cmdCommand[1:]...)
-	cmd.Stderr = &stderr
-	err = cmd.Run()
+	err = makeUI([]string{"/bin/bash", "html-swagger.sh", fullPth, filepath.Join(redocPath, "swagger.html")}, "")
 	if err != nil {
-		err := fmt.Errorf("error running command: %w, stderr: %s", err, stderr.String())
 		returnError(w, err)
 		return
 	}
-
-	success := ExportSuccess{Url: fmt.Sprintf("%s%s/index.html", BaseCDNUrl, fullSchema.Info.Title)}
+	err = makeUI(
+		[]string{
+			"npx", "--no-install", "@redocly/cli", "build-docs", fullPth, "--output=" + filepath.Join(
+				redocPath,
+				"redoc.html",
+			),
+		},
+		"./node_js",
+	)
+	if err != nil {
+		returnError(w, err)
+		return
+	}
+	success := ExportSuccess{
+		SwaggerUrl: fmt.Sprintf("%s%s/swagger.html", BaseCDNUrl, fullSchema.Info.Title),
+		RedocUrl:   fmt.Sprintf("%s%s/redoc.html", BaseCDNUrl, fullSchema.Info.Title),
+	}
 	_ = json.NewEncoder(w).Encode(success)
 
 	slog.Info("Exported: %s", fullSchema.Info.Title)
-	slog.Info("URL: %s", success.Url)
+	slog.Info("URL: %s", success.SwaggerUrl)
 }
 
 // expandedOpenapi handles OpenAPI export requests.
@@ -179,7 +200,7 @@ func listAll(w http.ResponseWriter, _ *http.Request) {
 	}
 	allFiles := AllResponse{AllFiles: []string{}}
 	for _, f := range files {
-		allFiles.AllFiles = append(allFiles.AllFiles, fmt.Sprintf("%s%s/index.html", BaseCDNUrl, f.Name()))
+		allFiles.AllFiles = append(allFiles.AllFiles, fmt.Sprintf("%s%s/swagger.html", BaseCDNUrl, f.Name()))
 	}
 	parser := json.NewEncoder(w)
 	_ = parser.Encode(allFiles)
