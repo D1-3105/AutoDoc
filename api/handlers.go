@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -69,20 +70,22 @@ func returnError(w http.ResponseWriter, err error) {
 // @Failure 400 {object} ErrorResponse
 // @Router /openapi-export [post]
 func openapiExport(w http.ResponseWriter, r *http.Request) {
+	jsonData, err := io.ReadAll(r.Body)
+	if err != nil {
+		slog.Error("Error reading body: %v", err)
+		returnError(w, err)
+		return
+	}
+
 	fullSchema := FullOpenAPI{}
-	if err := json.NewDecoder(r.Body).Decode(&fullSchema); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(jsonData)).Decode(&fullSchema); err != nil {
+		slog.Error("Error decoding JSON: %v", err)
 		returnError(w, err)
 		return
 	}
 
 	slog.Info("Accepted a new schema: %s", fullSchema.Info.Title)
 	fullPth := "./schemas/" + fullSchema.Info.Title + ".json"
-	jsonData, err := json.MarshalIndent(fullSchema, "", "  ")
-	if err != nil {
-		slog.Error("Error marshaling JSON: %v", err)
-		returnError(w, err)
-		return
-	}
 
 	err = os.WriteFile(fullPth, jsonData, 0644)
 	if err != nil {
