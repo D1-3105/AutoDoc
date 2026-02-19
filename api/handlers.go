@@ -86,6 +86,11 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("Accepted a new schema: %s", fullSchema.Info.Title)
 	fullPth := "./schemas/" + fullSchema.Info.Title + ".json"
+	if err = os.MkdirAll(filepath.Dir(fullPth), 0777); err != nil {
+		slog.Error("Error creating directory %s: %v", filepath.Dir(fullPth), err)
+		returnError(w, err)
+		return
+	}
 
 	err = os.WriteFile(fullPth, jsonData, 0644)
 	if err != nil {
