@@ -150,9 +150,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "https://cdn.example.com/example-service/redoc.html"
                 },
+                "stoplightUrl": {
+                    "type": "string",
+                    "example": "https://cdn.example.com/example-service/stoplight.html"
+                },
                 "url": {
                     "type": "string",
-                    "example": "https://cdn.example.com/example-service/index.html"
+                    "example": "https://cdn.example.com/example-service/swagger.html"
                 }
             }
         },

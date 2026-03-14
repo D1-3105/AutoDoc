@@ -20,8 +20,11 @@ definitions:
       redocUrl:
         example: https://cdn.example.com/example-service/redoc.html
         type: string
+      stoplightUrl:
+        example: https://cdn.example.com/example-service/stoplight.html
+        type: string
       url:
-        example: https://cdn.example.com/example-service/index.html
+        example: https://cdn.example.com/example-service/swagger.html
         type: string
     type: object
   api.FullOpenAPI:
