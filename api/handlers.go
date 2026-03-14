@@ -46,13 +46,14 @@ type ErrorResponse struct {
 // ExportSuccess represents a successful export response.
 // @description Returned when the OpenAPI schema has been successfully exported.
 type ExportSuccess struct {
-	SwaggerUrl string `json:"url" example:"https://cdn.example.com/example-service/index.html"`
-	RedocUrl   string `json:"redocUrl" example:"https://cdn.example.com/example-service/redoc.html"`
+	SwaggerUrl    string `json:"url" example:"https://cdn.example.com/example-service/swagger.html"`
+	RedocUrl      string `json:"redocUrl" example:"https://cdn.example.com/example-service/redoc.html"`
+	StoplightUrl  string `json:"stoplightUrl" example:"https://cdn.example.com/example-service/stoplight.html"`
 }
 
 // returnError sends an error response to the client.
 func returnError(w http.ResponseWriter, err error) {
-	slog.Error("Error handling request: %v", err)
+	slog.Error("Error handling request", "error", err)
 	w.WriteHeader(http.StatusBadRequest)
 	newError := ErrorResponse{Error: err.Error()}
 	_ = json.NewEncoder(w).Encode(newError)
@@ -72,41 +73,41 @@ func returnError(w http.ResponseWriter, err error) {
 func openapiExport(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := io.ReadAll(r.Body)
 	if err != nil {
-		slog.Error("Error reading body: %v", err)
+		slog.Error("Error reading body", "error", err)
 		returnError(w, err)
 		return
 	}
 
 	fullSchema := FullOpenAPI{}
 	if err := json.NewDecoder(bytes.NewReader(jsonData)).Decode(&fullSchema); err != nil {
-		slog.Error("Error decoding JSON: %v", err)
+		slog.Error("Error decoding JSON", "error", err)
 		returnError(w, err)
 		return
 	}
 
-	slog.Info("Accepted a new schema: %s", fullSchema.Info.Title)
+	slog.Info("Accepted a new schema", "title", fullSchema.Info.Title)
 	fullPth := "./schemas/" + fullSchema.Info.Title + ".json"
 	if err = os.MkdirAll(filepath.Dir(fullPth), 0777); err != nil {
-		slog.Error("Error creating directory %s: %v", filepath.Dir(fullPth), err)
+		slog.Error("Error creating directory", "path", filepath.Dir(fullPth), "error", err)
 		returnError(w, err)
 		return
 	}
 
 	err = os.WriteFile(fullPth, jsonData, 0644)
 	if err != nil {
-		slog.Error("Error writing file: %v", err)
+		slog.Error("Error writing file", "error", err)
 		returnError(w, err)
 		return
 	}
 
-	slog.Info("Wrote file: %s", fullSchema.Info.Title+".json")
-	slog.Info("File path: %s", fullPth)
+	slog.Info("Wrote file", "file", fullSchema.Info.Title+".json")
+	slog.Info("File path", "path", fullPth)
 
 	redocShortPath := fmt.Sprintf("./exported/%s", fullSchema.Info.Title)
 	fullPth, _ = filepath.Abs(fullPth)
 	redocPath, _ := filepath.Abs(redocShortPath)
 	makeUI := func(cmdCommand []string, cmdDir string) error {
-		slog.Info("Running command: %v", cmdCommand)
+		slog.Info("Running command", "command", cmdCommand)
 		_ = os.MkdirAll(redocPath, 0755)
 		var stderr bytes.Buffer
 		cmd := exec.Command(cmdCommand[0], cmdCommand[1:]...)
@@ -137,14 +138,22 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 		returnError(w, err)
 		return
 	}
+	err = makeUI([]string{"/bin/bash", "html-stoplight.sh", fullPth, filepath.Join(redocPath, "stoplight.html")}, "")
+	if err != nil {
+		returnError(w, err)
+		return
+	}
 	success := ExportSuccess{
-		SwaggerUrl: fmt.Sprintf("%s%s/swagger.html", BaseCDNUrl, fullSchema.Info.Title),
-		RedocUrl:   fmt.Sprintf("%s%s/redoc.html", BaseCDNUrl, fullSchema.Info.Title),
+		SwaggerUrl:   fmt.Sprintf("%s%s/swagger.html", BaseCDNUrl, fullSchema.Info.Title),
+		RedocUrl:     fmt.Sprintf("%s%s/redoc.html", BaseCDNUrl, fullSchema.Info.Title),
+		StoplightUrl: fmt.Sprintf("%s%s/stoplight.html", BaseCDNUrl, fullSchema.Info.Title),
 	}
 	_ = json.NewEncoder(w).Encode(success)
 
-	slog.Info("Exported: %s", fullSchema.Info.Title)
-	slog.Info("URL: %s", success.SwaggerUrl)
+	slog.Info("Exported", "title", fullSchema.Info.Title)
+	slog.Info("Swagger URL", "url", success.SwaggerUrl)
+	slog.Info("Redoc URL", "url", success.RedocUrl)
+	slog.Info("Stoplight URL", "url", success.StoplightUrl)
 }
 
 // expandedOpenapi handles OpenAPI export requests.
@@ -161,7 +170,7 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 func expandedOpenapi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	schemaName := vars["name"]
-	slog.Info("Received request for schema: %s", schemaName)
+	slog.Info("Received request for schema", "name", schemaName)
 	schemaPath, err := filepath.Abs(
 		fmt.Sprintf("./schemas/%s.json", strings.TrimSuffix(schemaName, ".json")),
 	)
@@ -177,7 +186,7 @@ func expandedOpenapi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !json.Valid(output) {
-		slog.Error("Failed to parse JSON: %s", output)
+		slog.Error("Failed to parse JSON", "output", string(output))
 		returnError(w, fmt.Errorf("failed to parse JSON: %s", output))
 		return
 	}

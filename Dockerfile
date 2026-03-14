@@ -24,6 +24,7 @@ COPY --from=builder /bin/autodoc /bin/autodoc
 # Copy Node.js app + deps
 COPY --from=node-builder /app /node_js
 COPY ./html-swagger.sh /html-swagger.sh
+COPY ./html-stoplight.sh /html-stoplight.sh
 WORKDIR /
 RUN chmod +x /node_js/deref.js
 
