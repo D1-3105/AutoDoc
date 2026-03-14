@@ -46,8 +46,9 @@ type ErrorResponse struct {
 // ExportSuccess represents a successful export response.
 // @description Returned when the OpenAPI schema has been successfully exported.
 type ExportSuccess struct {
-	SwaggerUrl string `json:"url" example:"https://cdn.example.com/example-service/index.html"`
-	RedocUrl   string `json:"redocUrl" example:"https://cdn.example.com/example-service/redoc.html"`
+	SwaggerUrl    string `json:"url" example:"https://cdn.example.com/example-service/swagger.html"`
+	RedocUrl      string `json:"redocUrl" example:"https://cdn.example.com/example-service/redoc.html"`
+	StoplightUrl  string `json:"stoplightUrl" example:"https://cdn.example.com/example-service/stoplight.html"`
 }
 
 // returnError sends an error response to the client.
@@ -137,14 +138,22 @@ func openapiExport(w http.ResponseWriter, r *http.Request) {
 		returnError(w, err)
 		return
 	}
+	err = makeUI([]string{"/bin/bash", "html-stoplight.sh", fullPth, filepath.Join(redocPath, "stoplight.html")}, "")
+	if err != nil {
+		returnError(w, err)
+		return
+	}
 	success := ExportSuccess{
-		SwaggerUrl: fmt.Sprintf("%s%s/swagger.html", BaseCDNUrl, fullSchema.Info.Title),
-		RedocUrl:   fmt.Sprintf("%s%s/redoc.html", BaseCDNUrl, fullSchema.Info.Title),
+		SwaggerUrl:   fmt.Sprintf("%s%s/swagger.html", BaseCDNUrl, fullSchema.Info.Title),
+		RedocUrl:     fmt.Sprintf("%s%s/redoc.html", BaseCDNUrl, fullSchema.Info.Title),
+		StoplightUrl: fmt.Sprintf("%s%s/stoplight.html", BaseCDNUrl, fullSchema.Info.Title),
 	}
 	_ = json.NewEncoder(w).Encode(success)
 
 	slog.Info("Exported: %s", fullSchema.Info.Title)
-	slog.Info("URL: %s", success.SwaggerUrl)
+	slog.Info("Swagger URL: %s", success.SwaggerUrl)
+	slog.Info("Redoc URL: %s", success.RedocUrl)
+	slog.Info("Stoplight URL: %s", success.StoplightUrl)
 }
 
 // expandedOpenapi handles OpenAPI export requests.
